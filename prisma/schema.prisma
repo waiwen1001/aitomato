@@ -1,0 +1,118 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Restaurant {
+  id String @id @default(uuid())
+  name String
+  address String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  outlets Outlet[]
+
+  @@map("restaurants")
+}
+
+model Outlet {
+  id String @id @default(uuid())
+  name String
+  restaurantId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+  menus Menu[]
+  orders Order[]
+  floors Floor[]
+
+  @@map("outlets")
+}
+
+model Menu {
+  id String @id @default(uuid())
+  outletId String
+  name String
+  price Decimal
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  outlet Outlet @relation(fields: [outletId], references: [id])
+  orderItems OrderItem[]
+
+  @@map("menus")
+}
+
+model Order {
+  id String @id @default(uuid())
+  outletId String
+  Subtotal Decimal
+  Tax Decimal
+  GST Decimal
+  Total Decimal
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  outlet Outlet @relation(fields: [outletId], references: [id])
+  orderItems OrderItem[]
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id String @id @default(uuid())
+  orderId String
+  menuId String
+  price Decimal
+  quantity Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  order Order @relation(fields: [orderId], references: [id])
+  menu Menu @relation(fields: [menuId], references: [id])
+
+  @@map("order_items")
+}
+
+model Floor {
+  id String @id @default(uuid())
+  name String
+  outletId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  outlet Outlet @relation(fields: [outletId], references: [id])
+  tables Table[]
+
+  @@map("floors")
+}
+
+model Table {
+  id String @id @default(uuid())
+  outletId String
+  floorId String
+  pax Int
+  status String
+  combinable Boolean
+  adjacentToTableId String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  floor Floor @relation(fields: [floorId], references: [id])
+  adjacentToTable Table? @relation("TableAdjacentToTable", fields: [adjacentToTableId], references: [id])
+  adjacentToTables Table[] @relation("TableAdjacentToTable")
+
+  @@map("tables")
+}
+
