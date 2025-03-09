@@ -3,10 +3,7 @@ import { RestaurantService } from "../services/restaurant.service";
 
 const restaurantService = new RestaurantService();
 
-export const getAllRestaurants = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const getAllRestaurants = async (req: Request, res: Response): Promise<void> => {
   try {
     const restaurants = await restaurantService.getAllRestaurants();
     res.status(200).json(restaurants);
@@ -16,10 +13,7 @@ export const getAllRestaurants = async (
   }
 };
 
-export const getRestaurantById = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const getRestaurantById = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     const restaurant = await restaurantService.getRestaurantById(id);
@@ -36,18 +30,9 @@ export const getRestaurantById = async (
   }
 };
 
-export const createRestaurant = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const createRestaurant = async (req: Request, res: Response): Promise<void> => {
   try {
-    // Get form data from request body
     const restaurantData = req.body;
-
-    // Add image path if an image was uploaded
-    if (req.file) {
-      restaurantData.imagePath = req.file.path;
-    }
 
     const newRestaurant = await restaurantService.createRestaurant(
       restaurantData
@@ -60,18 +45,10 @@ export const createRestaurant = async (
   }
 };
 
-export const updateRestaurant = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const updateRestaurant = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     const restaurantData = req.body;
-
-    // Add image path if an image was uploaded
-    if (req.file) {
-      restaurantData.imagePath = req.file.path;
-    }
 
     const updatedRestaurant = await restaurantService.updateRestaurant(
       id,

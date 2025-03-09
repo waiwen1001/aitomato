@@ -1,13 +1,7 @@
 import { Router } from "express";
 import asyncHandler from "express-async-handler";
-import {
-  getAllRestaurants,
-  getRestaurantById,
-  createRestaurant,
-  updateRestaurant,
-} from "../controllers/restaurant.controller";
+import { getAllRestaurants, getRestaurantById, createRestaurant, updateRestaurant } from "../controllers/restaurant.controller";
 import { validateRestaurantInput } from "../middleware/validation.middleware";
-import { upload } from "../utils/upload.util";
 
 const router = Router();
 
@@ -18,19 +12,9 @@ router.get("/", asyncHandler(getAllRestaurants));
 router.get("/:id", asyncHandler(getRestaurantById));
 
 // POST create new restaurant with image upload
-router.post(
-  "/",
-  upload.single("image"), // 'image' is the field name in the form
-  validateRestaurantInput,
-  asyncHandler(createRestaurant)
-);
+router.post("/", validateRestaurantInput, asyncHandler(createRestaurant));
 
 // PUT update restaurant with image upload
-router.put(
-  "/:id",
-  upload.single("image"), // 'image' is the field name in the form
-  validateRestaurantInput,
-  asyncHandler(updateRestaurant)
-);
+router.put("/:id", validateRestaurantInput, asyncHandler(updateRestaurant));
 
 export { router as restaurantRoutes };

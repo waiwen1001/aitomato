@@ -1,20 +1,31 @@
 import { Request, Response, NextFunction } from "express";
 
-export const validateRestaurantInput = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): void => {
-  // Example validation logic
-  const { name, location } = req.body; // Works for both JSON and form data
+export const validateRestaurantInput = (req: Request, res: Response, next: NextFunction): void => {
+  const { name, address } = req.body;
 
-  if (!name || !location) {
+  if (!name || !address) {
     res.status(400).json({
-      message: "Name and location are required",
-      receivedData: req.body, // For debugging purposes
+      message: "Name and address are required",
+      receivedData: req.body,
     });
     return;
   }
 
-  next(); // Proceed to the next middleware/controller
+  next();
 };
+
+export const validateQueueInput = (req: Request, res: Response, next: NextFunction): void => {
+  const { outletId, pax } = req.body;
+
+  if (!outletId || !pax) {
+    res.status(400).json({
+      message: "OutletId and pax are required",
+      receivedData: req.body,
+    });
+    return;
+  }
+
+  next();
+};
+
+

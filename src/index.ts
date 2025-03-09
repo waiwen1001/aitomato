@@ -4,6 +4,7 @@ import helmet from "helmet";
 import dotenv from "dotenv";
 import path from "path";
 import { restaurantRoutes } from "./routes/restaurant.routes";
+import { queueRoutes } from "./routes/queue.routes";
 import { errorHandler } from "./middleware/error.middleware";
 
 // Load environment variables
@@ -19,13 +20,9 @@ app.use(cors()); // Enable CORS
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded form data
 
-// Serve static files
-app.use(express.static(path.join(__dirname, "public")));
-// Make uploads directory accessible
-app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
-
 // Routes
 app.use("/api/restaurants", restaurantRoutes);
+app.use("/api/queues", queueRoutes);
 
 // Health check endpoint
 app.get("/health", (req, res) => {

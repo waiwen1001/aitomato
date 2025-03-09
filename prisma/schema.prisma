@@ -14,9 +14,9 @@ datasource db {
 }
 
 model Restaurant {
-  id String @id @default(uuid())
-  name String
-  address String
+  id        String   @id @default(uuid())
+  name      String
+  address   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -26,93 +26,116 @@ model Restaurant {
 }
 
 model Outlet {
-  id String @id @default(uuid())
-  name String
+  id           String   @id @default(uuid())
+  name         String
   restaurantId String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   restaurant Restaurant @relation(fields: [restaurantId], references: [id])
-  menus Menu[]
-  orders Order[]
-  floors Floor[]
+  menus      Menu[]
+  orders     Order[]
+  floors     Floor[]
 
   @@map("outlets")
 }
 
 model Menu {
-  id String @id @default(uuid())
-  outletId String
-  name String
-  price Decimal
+  id        String   @id @default(uuid())
+  outletId  String
+  name      String
+  price     Decimal
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  outlet Outlet @relation(fields: [outletId], references: [id])
+  outlet     Outlet      @relation(fields: [outletId], references: [id])
   orderItems OrderItem[]
 
   @@map("menus")
 }
 
 model Order {
-  id String @id @default(uuid())
-  outletId String
-  Subtotal Decimal
-  Tax Decimal
-  GST Decimal
-  Total Decimal
+  id        String   @id @default(uuid())
+  outletId  String
+  Subtotal  Decimal
+  Tax       Decimal
+  GST       Decimal
+  Total     Decimal
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  outlet Outlet @relation(fields: [outletId], references: [id])
+  outlet     Outlet      @relation(fields: [outletId], references: [id])
   orderItems OrderItem[]
 
   @@map("orders")
 }
 
 model OrderItem {
-  id String @id @default(uuid())
-  orderId String
-  menuId String
-  price Decimal
-  quantity Int
+  id        String   @id @default(uuid())
+  orderId   String
+  menuId    String
+  price     Decimal
+  quantity  Int
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
+
   order Order @relation(fields: [orderId], references: [id])
-  menu Menu @relation(fields: [menuId], references: [id])
+  menu  Menu  @relation(fields: [menuId], references: [id])
 
   @@map("order_items")
 }
 
 model Floor {
-  id String @id @default(uuid())
-  name String
-  outletId String
+  id        String   @id @default(uuid())
+  name      String
+  outletId  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  outlet Outlet @relation(fields: [outletId], references: [id])
+  outlet Outlet  @relation(fields: [outletId], references: [id])
   tables Table[]
 
   @@map("floors")
 }
 
 model Table {
-  id String @id @default(uuid())
-  outletId String
-  floorId String
-  pax Int
-  status String
-  combinable Boolean
+  id                String   @id @default(uuid())
+  outletId          String
+  floorId           String
+  pax               Int
+  status            String
+  combinable        Boolean
   adjacentToTableId String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  floor Floor @relation(fields: [floorId], references: [id])
-  adjacentToTable Table? @relation("TableAdjacentToTable", fields: [adjacentToTableId], references: [id])
+  floor            Floor   @relation(fields: [floorId], references: [id])
+  adjacentToTable  Table?  @relation("TableAdjacentToTable", fields: [adjacentToTableId], references: [id])
   adjacentToTables Table[] @relation("TableAdjacentToTable")
+  queue            Queue[]
 
   @@map("tables")
 }
 
+model Queue {
+  id          String      @id @default(uuid())
+  outletId    String
+  pax         Int
+  phoneNumber String
+  status      QueueStatus
+  tableId     String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  table Table? @relation(fields: [tableId], references: [id])
+
+  @@map("queues")
+}
+
+enum QueueStatus {
+  PENDING
+  PROCESSING
+  CANCELLED
+  COMPLETED
+  TIMEOUT
+}
