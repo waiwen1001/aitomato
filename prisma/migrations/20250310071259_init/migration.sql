@@ -1,3 +1,6 @@
+-- CreateEnum
+CREATE TYPE "QueueStatus" AS ENUM ('PENDING', 'PROCESSING', 'CANCELLED', 'COMPLETED', 'TIMEOUT');
+
 -- CreateTable
 CREATE TABLE "restaurants" (
     "id" TEXT NOT NULL,
@@ -85,6 +88,21 @@ CREATE TABLE "tables" (
     CONSTRAINT "tables_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "queues" (
+    "id" TEXT NOT NULL,
+    "outletId" TEXT NOT NULL,
+    "pax" INTEGER NOT NULL,
+    "phoneNumber" TEXT NOT NULL,
+    "queueNumber" TEXT NOT NULL,
+    "status" "QueueStatus" NOT NULL,
+    "tableId" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "queues_pkey" PRIMARY KEY ("id")
+);
+
 -- AddForeignKey
 ALTER TABLE "outlets" ADD CONSTRAINT "outlets_restaurantId_fkey" FOREIGN KEY ("restaurantId") REFERENCES "restaurants"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
@@ -108,3 +126,6 @@ ALTER TABLE "tables" ADD CONSTRAINT "tables_floorId_fkey" FOREIGN KEY ("floorId"
 
 -- AddForeignKey
 ALTER TABLE "tables" ADD CONSTRAINT "tables_adjacentToTableId_fkey" FOREIGN KEY ("adjacentToTableId") REFERENCES "tables"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "queues" ADD CONSTRAINT "queues_tableId_fkey" FOREIGN KEY ("tableId") REFERENCES "tables"("id") ON DELETE SET NULL ON UPDATE CASCADE;
