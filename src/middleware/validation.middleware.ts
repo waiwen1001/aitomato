@@ -35,3 +35,21 @@ export const validateQueueInput = (
 
   next();
 };
+
+export const validateTableInput = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  const { outletId, layout } = req.body;
+
+  if (!outletId || !layout || layout.length === 0) {
+    res.status(400).json({
+      message: "OutletId and layout are required",
+      receivedData: req.body,
+    });
+    return;
+  }
+
+  next();
+};

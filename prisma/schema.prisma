@@ -87,46 +87,53 @@ model OrderItem {
 
 model Floor {
   id        String   @id @default(uuid())
-  name      String
   outletId  String
+  floor     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   outlet Outlet  @relation(fields: [outletId], references: [id])
   tables Table[]
 
+  @@unique([outletId, floor])
   @@map("floors")
 }
 
 model Table {
-  id                String   @id @default(uuid())
+  id                String      @id @default(uuid())
   outletId          String
   floorId           String
+  type              String
+  seq               Int
   pax               Int
   status            String
-  combinable        Boolean
-  adjacentToTableId String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  merge             Json?
+  x_position        Int
+  y_position        Int
+  width             Int
+  height            Int
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
 
   floor            Floor   @relation(fields: [floorId], references: [id])
-  adjacentToTable  Table?  @relation("TableAdjacentToTable", fields: [adjacentToTableId], references: [id])
-  adjacentToTables Table[] @relation("TableAdjacentToTable")
   queue            Queue[]
 
   @@map("tables")
 }
 
 model Queue {
-  id          String      @id @default(uuid())
-  outletId    String
-  pax         Int
-  phoneNumber String
-  queueNumber String
-  status      QueueStatus
-  tableId     String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id                String      @id @default(uuid())
+  outletId          String
+  pax               Int
+  phoneNumber       String
+  queueNumber       String
+  seq               Int
+  status            QueueStatus
+  tableId           String?
+  estimatedWaitTime DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
 
   table Table? @relation(fields: [tableId], references: [id])
 
@@ -139,4 +146,11 @@ enum QueueStatus {
   CANCELLED
   COMPLETED
   TIMEOUT
+}
+
+enum TableStatus {
+  AVAILABLE
+  ONHOLD
+  OCCUPIED
+  MAINTENANCE
 }

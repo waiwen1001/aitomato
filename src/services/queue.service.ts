@@ -1,38 +1,32 @@
 import prisma from "./prisma.service";
+import { addSecondsToDate } from "../utils/func.utils";
+import { Queue, QueueStatus, TableStatus } from "@prisma/client";
+import { QueueInfo } from "../types/queue";
 
 export class QueueService {
   async getPendingQueues() {
     return prisma.queue.findMany({
       where: {
-        status: "PENDING",
+        status: QueueStatus.PENDING,
       },
     });
   }
 
-  private async generateQueueNumber(pax: number): Promise<string> {
-    let prefix = "A";
+  private getPrefix(pax: number): string {
     if (pax >= 3 && pax <= 4) {
-      prefix = "B";
+      return "B";
     } else if (pax >= 5) {
-      prefix = "C";
+      return "C";
     }
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    return "A";
+  }
 
-    const existingQueues = await prisma.queue.count({
-      where: {
-        createdAt: {
-          gte: today,
-        },
-        queueNumber: {
-          startsWith: prefix,
-        },
-      },
-    });
-
-    const sequenceNumber = existingQueues + 1;
-    const formattedNumber = String(sequenceNumber).padStart(3, "0");
+  private async generateQueueNumber(
+    prefix: string,
+    seq: number
+  ): Promise<string> {
+    const formattedNumber = String(seq).padStart(3, "0");
     return `${prefix}${formattedNumber}`;
   }
 
@@ -41,15 +35,45 @@ export class QueueService {
     pax: number;
     phoneNumber: string;
   }) {
-    const queueNumber = await this.generateQueueNumber(data.pax);
+    const prefix = this.getPrefix(data.pax);
 
-    return (prisma as any).queue.create({
+    var seq = 1;
+    const queue = await prisma.queue.findFirst({
+      where: {
+        queueNumber: {
+          startsWith: prefix,
+        },
+      },
+      orderBy: {
+        seq: "desc",
+      },
+    });
+
+    if (queue) {
+      seq = queue.seq + 1;
+    }
+
+    const queueNumber = await this.generateQueueNumber(prefix, seq);
+
+    const diningTimePerPax = parseInt(process.env.DINING_TIME_PER_PAX || "600"); // 10 minutes
+    const maxDiningTime = parseInt(process.env.MAX_DINING_TIME || "3600"); // 1 hour
+    const estimatedWaitTime = Math.min(
+      data.pax * diningTimePerPax,
+      maxDiningTime
+    );
+
+    const today = new Date();
+    const estTime = addSecondsToDate(today, estimatedWaitTime);
+
+    return prisma.queue.create({
       data: {
         outletId: data.outletId,
         pax: data.pax,
         queueNumber: queueNumber,
+        seq: seq,
         phoneNumber: data.phoneNumber,
-        status: "PENDING",
+        status: QueueStatus.PENDING,
+        estimatedWaitTime: estTime,
       },
     });
   }
@@ -58,9 +82,163 @@ export class QueueService {
     return prisma.queue.findUnique({
       where: {
         id: id,
-        status: "PENDING",
+        status: QueueStatus.PENDING,
       },
     });
+  }
+
+  async completeQueue(id: string) {
+    const queue = await prisma.queue.findUnique({
+      where: {
+        id: id,
+      },
+    });
+
+    if (!queue || !queue.tableId) {
+      throw new Error("Queue not found or table not found");
+    }
+
+    await prisma.queue.update({
+      where: {
+        id: id,
+      },
+      data: {
+        status: QueueStatus.COMPLETED,
+        completedAt: new Date(),
+      },
+    });
+
+    return queue;
+  }
+
+  async checkTableAvailability(data: { outletId: string; pax: number }) {
+    const table = await prisma.table.findFirst({
+      where: {
+        outletId: data.outletId,
+        status: TableStatus.AVAILABLE,
+        pax: {
+          gte: data.pax,
+        },
+      },
+      orderBy: {
+        pax: "asc",
+      },
+    });
+
+    return table;
+  }
+
+  async updateTableStatus(id: string, status: TableStatus) {
+    await prisma.table.update({
+      where: { id },
+      data: { status },
+    });
+  }
+
+  async updateQueueStatus(id: string, tableId: string, status: QueueStatus) {
+    const queue = await prisma.queue.update({
+      where: { id },
+      data: { tableId, status },
+    });
+
+    return queue;
+  }
+
+  async generateQueueInfo(queue: Queue) {
+    // check how many queue are in the same group and pending
+    const sameGroupQueues = await prisma.queue.findMany({
+      where: {
+        queueNumber: {
+          startsWith: queue.queueNumber[0],
+        },
+        status: {
+          in: [QueueStatus.PENDING, QueueStatus.PROCESSING],
+        },
+        NOT: {
+          id: queue.id,
+        },
+      },
+      orderBy: {
+        seq: "desc",
+      },
+    });
+
+    if (sameGroupQueues.length === 0) {
+      return {
+        queue: queue,
+        waitTime: 0,
+        servingQueue: "",
+        aheadGroup: 0,
+      } as QueueInfo;
+    }
+
+    const servingQueue = sameGroupQueues.find(
+      (q) => q.status === QueueStatus.PROCESSING
+    );
+
+    const pendingQueues = sameGroupQueues.filter(
+      (q) => q.status === QueueStatus.PENDING
+    );
+
+    const processingQueues = sameGroupQueues
+      .filter((q) => q.status === QueueStatus.PROCESSING)
+      .sort((a, b) => {
+        return a.estimatedWaitTime!.getTime() - b.estimatedWaitTime!.getTime();
+      });
+
+    var estimatedWaitTime = 0;
+    var currentTime = new Date().getTime();
+
+    for (var a = 0; a < pendingQueues.length; a++) {
+      if (processingQueues[a]) {
+        let processTime =
+          (processingQueues[a].estimatedWaitTime!.getTime() - currentTime) /
+          1000;
+
+        if (processTime > 3600) {
+          processTime = 3600; // if queue is more than 1 hour, then set to 1 hour
+        } else if (processTime <= 300) {
+          processTime = 300; // if queue is less than 5 minutes, then set to 5 minutes
+        }
+
+        estimatedWaitTime += processTime;
+      } else {
+        estimatedWaitTime += 600; // if pending queue is more than processing queue, then add 10 minutes
+      }
+    }
+
+    const queueInfo: QueueInfo = {
+      queue: queue,
+      waitTime: Math.floor(estimatedWaitTime),
+      servingQueue: servingQueue ? servingQueue.queueNumber : "",
+      aheadGroup: pendingQueues.length,
+    };
+
+    return queueInfo;
+  }
+
+  async getNextQueue(outletId: string, queueNumber: string, seq: number) {
+    if (!queueNumber || !seq || !outletId) {
+      return null;
+    }
+
+    const prefix = queueNumber[0];
+
+    const queue = await prisma.queue.findFirst({
+      where: {
+        seq: { gt: seq },
+        outletId: outletId,
+        status: QueueStatus.PENDING,
+        queueNumber: {
+          startsWith: prefix,
+        },
+      },
+      orderBy: {
+        seq: "asc",
+      },
+    });
+
+    return queue;
   }
 }
 

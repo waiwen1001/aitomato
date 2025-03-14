@@ -105,3 +105,19 @@ export const getOutletById = async (
     res.status(500).json({ message: "Failed to fetch outlet" });
   }
 };
+
+export const createTable = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const tableData = req.body;
+
+    await outletService.createTable(tableData);
+
+    res.status(201).json({ message: "Table created successfully" });
+  } catch (error) {
+    console.error("Error creating table:", error);
+    res.status(500).json({ message: "Failed to create table" });
+  }
+};

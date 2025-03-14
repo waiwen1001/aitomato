@@ -1,0 +1,2 @@
+-- CreateEnum
+CREATE TYPE "TableStatus" AS ENUM ('AVAILABLE', 'OCCUPIED', 'MAINTENANCE');
