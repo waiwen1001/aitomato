@@ -53,3 +53,39 @@ export const validateTableInput = (
 
   next();
 };
+
+export const validateMenuInput = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  const { outletId, name, price } = req.body;
+
+  if (!outletId || !name || !price) {
+    res.status(400).json({
+      message: "OutletId, name, and price are required",
+      receivedData: req.body,
+    });
+    return;
+  }
+
+  next();
+};
+
+export const validateFileInput = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  const file = req.file;
+
+  if (!file) {
+    res.status(400).json({
+      message: "File is required",
+      receivedData: req.body,
+    });
+    return;
+  }
+
+  next();
+};

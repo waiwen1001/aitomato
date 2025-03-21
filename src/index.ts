@@ -9,6 +9,8 @@ import { queueRoutes } from "./routes/queue.routes";
 import { outletRoutes } from "./routes/outlet.routes";
 import { errorHandler } from "./middleware/error.middleware";
 import { handleQueueSocket } from "./utils/socket.utils";
+import { menuRoutes } from "./routes/menu.routers";
+import { fileRoutes } from "./routes/file.routers";
 
 dotenv.config();
 
@@ -32,6 +34,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/api/restaurants", restaurantRoutes);
 app.use("/api/queues", queueRoutes);
 app.use("/api/outlets", outletRoutes);
+app.use("/api/menus", menuRoutes);
+app.use("/api/files", fileRoutes);
 
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });
