@@ -11,6 +11,7 @@ import { errorHandler } from "./middleware/error.middleware";
 import { handleQueueSocket } from "./utils/socket.utils";
 import { menuRoutes } from "./routes/menu.routers";
 import { fileRoutes } from "./routes/file.routers";
+import path from "path";
 
 dotenv.config();
 
@@ -30,6 +31,8 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use("/api/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 app.use("/api/restaurants", restaurantRoutes);
 app.use("/api/queues", queueRoutes);

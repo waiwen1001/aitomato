@@ -40,18 +40,48 @@ model Outlet {
   @@map("outlets")
 }
 
-model Menu {
+model Category {
   id        String   @id @default(uuid())
   outletId  String
   name      String
-  price     Decimal
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  menus Menu[]
+
+  @@map("categories")
+}
+
+model Menu {
+  id        String   @id @default(uuid())
+  outletId  String
+  categoryId String?
+  name        String
+  price       Decimal
+  description String?
+  available   Boolean  @default(true)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
   outlet     Outlet      @relation(fields: [outletId], references: [id])
   orderItems OrderItem[]
-
+  images     MenuImage[]
+  category   Category?  @relation(fields: [categoryId], references: [id])
+  
   @@map("menus")
+}
+
+model MenuImage {
+  id        String   @id @default(uuid())
+  menuId    String
+  path      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  menu Menu @relation(fields: [menuId], references: [id])
+
+  @@map("menu_images")
 }
 
 model Order {

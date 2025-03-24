@@ -103,6 +103,15 @@ export class OutletService {
 
     return;
   }
+
+  async createCategory(outletId: string, name: string) {
+    return prisma.category.create({
+      data: {
+        name,
+        outletId,
+      },
+    });
+  }
 }
 
 export default OutletService;

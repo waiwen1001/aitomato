@@ -3,10 +3,7 @@ import { QueueService } from "../services/queue.service";
 import { QueueStatus, TableStatus } from "@prisma/client";
 const queueService = new QueueService();
 
-export const getPendingQueues = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const getPendingQueues = async (req: Request, res: Response) => {
   try {
     const queues = await queueService.getPendingQueues();
     res.status(200).json(queues);
@@ -16,10 +13,7 @@ export const getPendingQueues = async (
   }
 };
 
-export const createQueue = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const createQueue = async (req: Request, res: Response) => {
   try {
     const queue = await queueService.createQueue(req.body);
 
@@ -60,10 +54,7 @@ export const createQueue = async (
   }
 };
 
-export const getPendingQueuesById = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const getPendingQueuesById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const queue = await queueService.getPendingQueuesById(id);
@@ -86,10 +77,7 @@ export const getPendingQueuesById = async (
   }
 };
 
-export const completeQueue = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const completeQueue = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const queue = await queueService.getPendingQueuesById(id);

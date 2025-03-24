@@ -5,19 +5,8 @@ import { OutletService } from "../services/outlet.service";
 const menuService = new MenuService();
 const outletService = new OutletService();
 
-export const getAllMenus = async (req: Request, res: Response) => {
-  const menus = await menuService.getAllMenus();
-  res.status(200).json(menus);
-};
-
-export const getMenuById = async (req: Request, res: Response) => {
-  const { id } = req.params;
-  const menu = await menuService.getMenuById(id);
-  res.status(200).json(menu);
-};
-
 export const createMenu = async (req: Request, res: Response) => {
-  const { outletId, name, price } = req.body;
+  const { outletId, name, price, images, categoryId } = req.body;
 
   const outlet = await outletService.getOutletById(outletId);
 
@@ -26,7 +15,26 @@ export const createMenu = async (req: Request, res: Response) => {
     return;
   }
 
-  const menu = await menuService.createMenu({ outletId, name, price });
+  if (categoryId) {
+    const category = await menuService.getCategoryById(categoryId, outletId);
+
+    if (!category) {
+      res.status(404).json({ message: "Category not found" });
+      return;
+    }
+  }
+
+  const menu = await menuService.createMenu({
+    outletId,
+    name,
+    price,
+    categoryId,
+  });
+
+  if (images && images.length > 0) {
+    await menuService.createMenuImages(menu.id, images);
+  }
+
   res.status(201).json(menu);
 };
 

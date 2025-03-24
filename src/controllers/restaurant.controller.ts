@@ -1,14 +1,13 @@
 import { Request, Response } from "express";
 import { RestaurantService } from "../services/restaurant.service";
 import { OutletService } from "../services/outlet.service";
+import { MenuService } from "../services/menu.service";
 
 const restaurantService = new RestaurantService();
 const outletService = new OutletService();
+const menuService = new MenuService();
 
-export const getAllRestaurants = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const getAllRestaurants = async (req: Request, res: Response) => {
   try {
     const restaurants = await restaurantService.getAllRestaurants();
     res.status(200).json(restaurants);
@@ -18,10 +17,7 @@ export const getAllRestaurants = async (
   }
 };
 
-export const getRestaurantById = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const getRestaurantById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const restaurant = await restaurantService.getRestaurantById(id);
@@ -38,10 +34,7 @@ export const getRestaurantById = async (
   }
 };
 
-export const createRestaurant = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const createRestaurant = async (req: Request, res: Response) => {
   try {
     const restaurantData = req.body;
 
@@ -61,10 +54,7 @@ export const createRestaurant = async (
   }
 };
 
-export const updateRestaurant = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const updateRestaurant = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const restaurantData = req.body;
@@ -86,10 +76,7 @@ export const updateRestaurant = async (
   }
 };
 
-export const getOutletById = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const getOutletById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const outlet = await outletService.getOutletById(id);
@@ -106,10 +93,7 @@ export const getOutletById = async (
   }
 };
 
-export const createTable = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
+export const createTable = async (req: Request, res: Response) => {
   try {
     const tableData = req.body;
 
@@ -120,4 +104,25 @@ export const createTable = async (
     console.error("Error creating table:", error);
     res.status(500).json({ message: "Failed to create table" });
   }
+};
+
+export const getMenusByOutletId = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const menus = await menuService.getMenusByOutletId(id);
+
+    res.status(200).json(menus);
+  } catch (error) {
+    console.error(
+      `Error fetching menus for outlet with ID ${req.params.id}:`,
+      error
+    );
+    res.status(500).json({ message: "Failed to fetch menus" });
+  }
+};
+
+export const createCategory = async (req: Request, res: Response) => {
+  const { outletId, name } = req.body;
+  const category = await outletService.createCategory(outletId, name);
+  res.status(201).json(category);
 };
