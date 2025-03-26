@@ -36,7 +36,7 @@ export const validateQueueInput = (
   next();
 };
 
-export const validateTableInput = (
+export const validateLayoutInput = (
   req: Request,
   res: Response,
   next: NextFunction

@@ -1,5 +1,5 @@
-import { Table } from "@prisma/client";
-import { TableRequest } from "../types/table";
+import { Layout } from "@prisma/client";
+import { LayoutRequest } from "../types/layout";
 import prisma from "./prisma.service";
 
 export class OutletService {
@@ -40,7 +40,7 @@ export class OutletService {
     });
   }
 
-  async createTable(data: TableRequest) {
+  async createLayout(data: LayoutRequest) {
     const outlet = await this.getOutletById(data.outletId);
 
     if (!outlet) {
@@ -65,15 +65,15 @@ export class OutletService {
           });
         }
 
-        const existingTables = await prisma.table.findMany({
+        const existingLayouts = await prisma.layout.findMany({
           where: {
             outletId: data.outletId,
             floorId: floor!.id,
           },
         });
 
-        if (existingTables.length > 0) {
-          await prisma.table.deleteMany({
+        if (existingLayouts.length > 0) {
+          await prisma.layout.deleteMany({
             where: {
               outletId: data.outletId,
               floorId: floor!.id,
@@ -81,22 +81,22 @@ export class OutletService {
           });
         }
 
-        const tables = layout.tables.map((table) => ({
+        const layouts = layout.layouts.map((layout) => ({
           outletId: data.outletId,
           floorId: floor!.id,
-          pax: table.pax,
+          pax: layout.pax,
           status: "available",
-          x_position: table.x,
-          y_position: table.y,
-          width: table.width,
-          height: table.height,
-          type: table.type || "table",
-          merge: table.merge,
-          seq: table.seq,
+          x_position: layout.x,
+          y_position: layout.y,
+          width: layout.width,
+          height: layout.height,
+          type: layout.type || "table",
+          merge: layout.merge,
+          seq: layout.seq,
         }));
 
-        await prisma.table.createMany({
-          data: tables,
+        await prisma.layout.createMany({
+          data: layouts,
         });
       })
     );

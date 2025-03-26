@@ -1,14 +1,14 @@
-export interface TableRequest {
+export interface LayoutRequest {
   outletId: string;
-  layout: TableLayout[];
+  layout: LayoutPage[];
 }
 
-export interface TableLayout {
+export interface LayoutPage {
   floor: string;
-  tables: Table[];
+  layouts: Layout[];
 }
 
-export interface Table {
+export interface Layout {
   outletId: string;
   floorId: string;
   status: string;

@@ -93,16 +93,16 @@ export const getOutletById = async (req: Request, res: Response) => {
   }
 };
 
-export const createTable = async (req: Request, res: Response) => {
+export const createLayout = async (req: Request, res: Response) => {
   try {
-    const tableData = req.body;
+    const layoutData = req.body;
 
-    await outletService.createTable(tableData);
+    await outletService.createLayout(layoutData);
 
-    res.status(201).json({ message: "Table created successfully" });
+    res.status(201).json({ message: "Layout created successfully" });
   } catch (error) {
-    console.error("Error creating table:", error);
-    res.status(500).json({ message: "Failed to create table" });
+    console.error("Error creating layout:", error);
+    res.status(500).json({ message: "Failed to create layout" });
   }
 };
 

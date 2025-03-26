@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
 import { QueueService } from "../services/queue.service";
-import { QueueStatus, TableStatus } from "@prisma/client";
+import { QueueStatus, LayoutStatus } from "@prisma/client";
 import { PusherService } from "../services/pusher.service";
-import { TableService } from "../services/table.service";
+import { LayoutService } from "../services/layout.service";
 
 const queueService = new QueueService();
-const tableService = new TableService();
+const layoutService = new LayoutService();
 
 export const getPendingQueues = async (req: Request, res: Response) => {
   try {
@@ -20,18 +20,18 @@ export const getPendingQueues = async (req: Request, res: Response) => {
 export const createQueue = async (req: Request, res: Response) => {
   try {
     const queue = await queueService.createQueue(req.body);
-    const table = await tableService.getTableAvailability(req.body);
+    const layout = await layoutService.getLayoutAvailability(req.body);
 
     const queueInfo = await queueService.generateQueueInfo(queue);
-    if (table) {
-      await tableService.updateTableStatus(table.id, TableStatus.OCCUPIED);
+    if (layout) {
+      await layoutService.updateLayoutStatus(layout.id, LayoutStatus.OCCUPIED);
       await queueService.updateQueueStatus(
         queue.id,
-        table.id,
+        layout.id,
         QueueStatus.PROCESSING
       );
 
-      queue.tableId = table.id;
+      queue.layoutId = layout.id;
       queue.status = QueueStatus.PROCESSING;
 
       res.status(201).json({
@@ -89,28 +89,28 @@ export const completeQueue = async (req: Request, res: Response) => {
 
     const completedQueue = await queueService.completeQueue(queueId);
 
-    var tableId = null;
-    if (completedQueue.tableId) {
-      await tableService.updateTableStatus(
-        completedQueue.tableId,
-        TableStatus.AVAILABLE
+    var layoutId = null;
+    if (completedQueue.layoutId) {
+      await layoutService.updateLayoutStatus(
+        completedQueue.layoutId,
+        LayoutStatus.AVAILABLE
       );
 
-      tableId = completedQueue.tableId;
+      layoutId = completedQueue.layoutId;
     } else {
-      const table = await tableService.getTableAvailability({
+      const layout = await layoutService.getLayoutAvailability({
         outletId: completedQueue.outletId,
         pax: queue.pax,
       });
 
-      if (table) {
-        tableId = table.id;
+      if (layout) {
+        layoutId = layout.id;
       }
     }
 
-    console.log("tableId", tableId);
+    console.log("layoutId", layoutId);
 
-    if (!tableId) {
+    if (!layoutId) {
       res.status(200).json({
         success: true,
         message: "Queue completed successfully",
@@ -129,10 +129,10 @@ export const completeQueue = async (req: Request, res: Response) => {
     console.log("nextQueue", nextQueue);
 
     if (nextQueue) {
-      if (!nextQueue.tableId && nextQueue.status === QueueStatus.PENDING) {
+      if (!nextQueue.layoutId && nextQueue.status === QueueStatus.PENDING) {
         await queueService.updateQueueStatus(
           nextQueue.id,
-          tableId,
+          layoutId,
           QueueStatus.PROCESSING
         );
       }

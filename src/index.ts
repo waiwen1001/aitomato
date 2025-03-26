@@ -10,7 +10,7 @@ import { errorHandler } from "./middleware/error.middleware";
 import { menuRoutes } from "./routes/menu.routers";
 import { fileRoutes } from "./routes/file.routers";
 import { orderRoutes } from "./routes/order.routers";
-import { tableRoutes } from "./routes/table.routers";
+import { layoutRoutes } from "./routes/layout.routers";
 import path from "path";
 
 dotenv.config();
@@ -32,7 +32,7 @@ app.use("/api/outlets", outletRoutes);
 app.use("/api/menus", menuRoutes);
 app.use("/api/files", fileRoutes);
 app.use("/api/orders", orderRoutes);
-app.use("/api/tables", tableRoutes);
+app.use("/api/layouts", layoutRoutes);
 
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok" });

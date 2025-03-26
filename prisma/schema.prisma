@@ -89,7 +89,7 @@ model Order {
   id        String   @id @default(uuid())
   outletId  String
   queueId   String   @unique
-  tableId   String?
+  layoutId  String?
   subtotal  Decimal
   tax       Decimal
   gst       Decimal
@@ -101,7 +101,7 @@ model Order {
   outlet     Outlet      @relation(fields: [outletId], references: [id])
   orderItems OrderItem[]
   queue      Queue      @relation(fields: [queueId], references: [id])
-  table      Table?      @relation(fields: [tableId], references: [id])
+  layout     Layout?    @relation(fields: [layoutId], references: [id])
   
   @@map("orders")
 }
@@ -141,13 +141,13 @@ model Floor {
   updatedAt DateTime @updatedAt
 
   outlet Outlet  @relation(fields: [outletId], references: [id])
-  tables Table[]
+  layouts Layout[]
 
   @@unique([outletId, floor])
   @@map("floors")
 }
 
-model Table {
+model Layout {
   id                String      @id @default(uuid())
   outletId          String
   floorId           String
@@ -166,7 +166,7 @@ model Table {
   floor            Floor   @relation(fields: [floorId], references: [id])
   queue            Queue[]
   orders           Order[]
-  @@map("tables")
+  @@map("layouts")
 }
 
 model Queue {
@@ -177,13 +177,13 @@ model Queue {
   queueNumber       String
   seq               Int
   status            QueueStatus
-  tableId           String?
+  layoutId          String?
   estimatedWaitTime DateTime?
   completedAt       DateTime?
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 
-  table Table? @relation(fields: [tableId], references: [id])
+  layout Layout? @relation(fields: [layoutId], references: [id])
   order Order?
 
   @@map("queues")
@@ -197,7 +197,7 @@ enum QueueStatus {
   TIMEOUT
 }
 
-enum TableStatus {
+enum LayoutStatus {
   AVAILABLE
   ONHOLD
   OCCUPIED

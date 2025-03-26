@@ -93,7 +93,7 @@ export class QueueService {
         id: id,
       },
       include: {
-        table: true,
+        layout: true,
       },
     });
   }
@@ -110,10 +110,10 @@ export class QueueService {
     });
   }
 
-  async updateQueueStatus(id: string, tableId: string, status: QueueStatus) {
+  async updateQueueStatus(id: string, layoutId: string, status: QueueStatus) {
     const queue = await prisma.queue.update({
       where: { id },
-      data: { tableId, status },
+      data: { layoutId, status },
     });
 
     return queue;
