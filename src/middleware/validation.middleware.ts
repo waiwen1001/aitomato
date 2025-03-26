@@ -89,3 +89,39 @@ export const validateFileInput = (
 
   next();
 };
+
+export const validateOrderInput = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  const { outletId, queueId, menuId, quantity, remarks } = req.body;
+
+  if (!outletId || !queueId || !menuId || !quantity) {
+    res.status(400).json({
+      message: "OutletId, queueId, menuId, and quantity are required",
+      receivedData: req.body,
+    });
+    return;
+  }
+
+  next();
+};
+
+export const validateQueueOrderInput = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  const { queueId } = req.body;
+
+  if (!queueId) {
+    res.status(400).json({
+      message: "QueueId is required",
+      receivedData: req.body,
+    });
+    return;
+  }
+
+  next();
+};

@@ -1,6 +1,7 @@
 export interface MenuImage {
   id: string;
   path: string;
+  type: string;
 }
 
 export interface Menu {
@@ -8,6 +9,7 @@ export interface Menu {
   name: string;
   description: string?;
   price: number;
+  thumbnail: string | null;
   images: MenuImage[];
 }
 

@@ -13,6 +13,6 @@ const router = Router();
 router.get("/pending", asyncHandler(getPendingQueues));
 router.get("/pending/:id", asyncHandler(getPendingQueuesById));
 router.post("/", validateQueueInput, asyncHandler(createQueue));
-router.post("/complete/:id", asyncHandler(completeQueue));
+router.post("/complete", asyncHandler(completeQueue));
 
 export { router as queueRoutes };

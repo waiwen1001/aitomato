@@ -5,7 +5,7 @@ export interface TableRequest {
 
 export interface TableLayout {
   floor: string;
-  table: Table[];
+  tables: Table[];
 }
 
 export interface Table {

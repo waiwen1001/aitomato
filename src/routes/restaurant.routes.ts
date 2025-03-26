@@ -5,7 +5,6 @@ import {
   getRestaurantById,
   createRestaurant,
   updateRestaurant,
-  getOutletById,
 } from "../controllers/restaurant.controller";
 import { validateRestaurantInput } from "../middleware/validation.middleware";
 
@@ -15,7 +14,5 @@ router.get("/", asyncHandler(getAllRestaurants));
 router.get("/:id", asyncHandler(getRestaurantById));
 router.post("/", validateRestaurantInput, asyncHandler(createRestaurant));
 router.put("/:id", validateRestaurantInput, asyncHandler(updateRestaurant));
-
-router.get("/outlet/:id", asyncHandler(getOutletById));
 
 export { router as restaurantRoutes };

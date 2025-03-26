@@ -81,7 +81,7 @@ export class OutletService {
           });
         }
 
-        const tables = layout.table.map((table) => ({
+        const tables = layout.tables.map((table) => ({
           outletId: data.outletId,
           floorId: floor!.id,
           pax: table.pax,

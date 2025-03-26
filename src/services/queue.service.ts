@@ -1,6 +1,6 @@
 import prisma from "./prisma.service";
 import { addSecondsToDate } from "../utils/func.utils";
-import { Queue, QueueStatus, TableStatus } from "@prisma/client";
+import { Queue, QueueStatus } from "@prisma/client";
 import { QueueInfo } from "../types/queue";
 
 export class QueueService {
@@ -82,23 +82,24 @@ export class QueueService {
     return prisma.queue.findUnique({
       where: {
         id: id,
-        status: QueueStatus.PENDING,
+        // status: QueueStatus.PENDING,
+      },
+    });
+  }
+
+  async getQueueById(id: string) {
+    return prisma.queue.findUnique({
+      where: {
+        id: id,
+      },
+      include: {
+        table: true,
       },
     });
   }
 
   async completeQueue(id: string) {
-    const queue = await prisma.queue.findUnique({
-      where: {
-        id: id,
-      },
-    });
-
-    if (!queue || !queue.tableId) {
-      throw new Error("Queue not found or table not found");
-    }
-
-    await prisma.queue.update({
+    return prisma.queue.update({
       where: {
         id: id,
       },
@@ -106,32 +107,6 @@ export class QueueService {
         status: QueueStatus.COMPLETED,
         completedAt: new Date(),
       },
-    });
-
-    return queue;
-  }
-
-  async checkTableAvailability(data: { outletId: string; pax: number }) {
-    const table = await prisma.table.findFirst({
-      where: {
-        outletId: data.outletId,
-        status: TableStatus.AVAILABLE,
-        pax: {
-          gte: data.pax,
-        },
-      },
-      orderBy: {
-        pax: "asc",
-      },
-    });
-
-    return table;
-  }
-
-  async updateTableStatus(id: string, status: TableStatus) {
-    await prisma.table.update({
-      where: { id },
-      data: { status },
     });
   }
 

@@ -1,6 +1,7 @@
 import prisma from "./prisma.service";
 import fs from "fs";
 import path from "path";
+import sharp from "sharp";
 import { CategoryMap } from "../types/menu";
 
 export class MenuService {
@@ -42,10 +43,9 @@ export class MenuService {
         name: menu.name,
         description: menu.description,
         price: Number(menu.price),
-        images: menu.images.map((img) => ({
-          id: img.id,
-          path: img.path,
-        })),
+        thumbnail:
+          menu.images.find((img) => img.type === "thumbnail")?.path || null,
+        images: menu.images.filter((img) => img.type === "original"),
       });
 
       return acc;
@@ -57,6 +57,9 @@ export class MenuService {
   async getMenuById(id: string) {
     return prisma.menu.findUnique({
       where: { id },
+      include: {
+        images: true,
+      },
     });
   }
 
@@ -77,7 +80,7 @@ export class MenuService {
         name: data.name,
         price: data.price,
         outletId: data.outletId,
-        categoryId: data.categoryId,
+        categoryId: data.categoryId || null,
       },
     });
   }
@@ -93,24 +96,63 @@ export class MenuService {
   }
 
   async createMenuImages(menuId: string, images: string[]) {
-    const uploadPath = `api/uploads/${menuId}`;
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-    }
+    const uploadPath = `uploads/${menuId}`;
+    const thumbnailPath = `uploads/${menuId}/thumbnails`;
+
+    // Create directories if they don't exist
+    [uploadPath, thumbnailPath].forEach((dir) => {
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      }
+    });
 
     const savedImages = [];
+    const thumbnailImages = [];
     const baseUrl = process.env.BASE_URL + "/api";
 
     for (const image of images) {
       const fileName = path.basename(image);
       const sourcePath = path.join(process.cwd(), image);
-      const targetPath = path.join(process.cwd(), uploadPath, fileName);
-      fs.copyFileSync(sourcePath, targetPath);
+      const originalPath = path.join(process.cwd(), uploadPath, fileName);
+      const thumbnailPath = path.join(
+        process.cwd(),
+        uploadPath,
+        "thumbnails",
+        fileName
+      );
+
+      // Copy original image
+      fs.copyFileSync(sourcePath, originalPath);
+
+      // Create thumbnail
+      await sharp(sourcePath)
+        .resize(300, 300, {
+          fit: "cover",
+          position: "center",
+        })
+        .jpeg({ quality: 80 })
+        .toFile(thumbnailPath);
+
       savedImages.push(`${baseUrl}/${uploadPath}/${fileName}`);
+      thumbnailImages.push(`${baseUrl}/${uploadPath}/thumbnails/${fileName}`);
     }
 
-    return prisma.menuImage.createMany({
-      data: savedImages.map((imagePath) => ({ menuId, path: imagePath })),
+    await prisma.menuImage.createMany({
+      data: savedImages.map((imagePath) => ({
+        menuId,
+        path: imagePath,
+        type: "original",
+      })),
     });
+
+    await prisma.menuImage.createMany({
+      data: thumbnailImages.map((imagePath) => ({
+        menuId,
+        path: imagePath,
+        type: "thumbnail",
+      })),
+    });
+
+    return;
   }
 }

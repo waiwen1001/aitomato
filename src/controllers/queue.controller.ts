@@ -1,7 +1,11 @@
 import { Request, Response } from "express";
 import { QueueService } from "../services/queue.service";
 import { QueueStatus, TableStatus } from "@prisma/client";
+import { PusherService } from "../services/pusher.service";
+import { TableService } from "../services/table.service";
+
 const queueService = new QueueService();
+const tableService = new TableService();
 
 export const getPendingQueues = async (req: Request, res: Response) => {
   try {
@@ -16,13 +20,11 @@ export const getPendingQueues = async (req: Request, res: Response) => {
 export const createQueue = async (req: Request, res: Response) => {
   try {
     const queue = await queueService.createQueue(req.body);
+    const table = await tableService.getTableAvailability(req.body);
 
-    // check if the table is available
-    const table = await queueService.checkTableAvailability(req.body);
-
+    const queueInfo = await queueService.generateQueueInfo(queue);
     if (table) {
-      // update the table status to occupied
-      await queueService.updateTableStatus(table.id, TableStatus.OCCUPIED);
+      await tableService.updateTableStatus(table.id, TableStatus.OCCUPIED);
       await queueService.updateQueueStatus(
         queue.id,
         table.id,
@@ -35,13 +37,11 @@ export const createQueue = async (req: Request, res: Response) => {
       res.status(201).json({
         success: true,
         message: "Queue created successfully",
-        data: queue,
+        data: queueInfo,
       });
 
       return;
     }
-
-    const queueInfo = await queueService.generateQueueInfo(queue);
 
     res.status(201).json({
       success: true,
@@ -79,33 +79,72 @@ export const getPendingQueuesById = async (req: Request, res: Response) => {
 
 export const completeQueue = async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
-    const queue = await queueService.getPendingQueuesById(id);
+    const { queueId } = req.body;
+    const queue = await queueService.getPendingQueuesById(queueId);
 
     if (!queue) {
       res.status(404).json({ message: "Queue not found" });
       return;
     }
 
-    // Complete the queue and get the updated queue
-    const completedQueue = await queueService.completeQueue(id);
+    const completedQueue = await queueService.completeQueue(queueId);
 
+    var tableId = null;
     if (completedQueue.tableId) {
-      // If there was a table assigned, set it back to available
-      await queueService.updateTableStatus(
+      await tableService.updateTableStatus(
         completedQueue.tableId,
         TableStatus.AVAILABLE
       );
+
+      tableId = completedQueue.tableId;
+    } else {
+      const table = await tableService.getTableAvailability({
+        outletId: completedQueue.outletId,
+        pax: queue.pax,
+      });
+
+      if (table) {
+        tableId = table.id;
+      }
     }
 
-    const getNextQueue = await queueService.getNextQueue(
+    console.log("tableId", tableId);
+
+    if (!tableId) {
+      res.status(200).json({
+        success: true,
+        message: "Queue completed successfully",
+        data: completedQueue,
+      });
+
+      return;
+    }
+
+    const nextQueue = await queueService.getNextQueue(
       completedQueue.outletId,
       completedQueue.queueNumber,
       completedQueue.seq
     );
 
-    if (getNextQueue) {
-      console.log(getNextQueue);
+    console.log("nextQueue", nextQueue);
+
+    if (nextQueue) {
+      if (!nextQueue.tableId && nextQueue.status === QueueStatus.PENDING) {
+        await queueService.updateQueueStatus(
+          nextQueue.id,
+          tableId,
+          QueueStatus.PROCESSING
+        );
+      }
+
+      const pusherService = PusherService.getInstance();
+
+      const queueInfo = await queueService.getQueueById(nextQueue.id);
+      if (queueInfo) {
+        await pusherService.notifyQueue(nextQueue.id, queueInfo);
+      } else {
+        console.error(`Queue not found with ID: ${nextQueue.id}`);
+      }
     }
 
     res.status(200).json({
@@ -114,7 +153,7 @@ export const completeQueue = async (req: Request, res: Response) => {
       data: completedQueue,
     });
   } catch (error) {
-    console.error(`Error completing queue with ID ${req.params.id}:`, error);
+    console.error(`Error completing queue with ID ${req.body.queueId}:`, error);
     res.status(500).json({ message: "Failed to complete queue" });
   }
 };

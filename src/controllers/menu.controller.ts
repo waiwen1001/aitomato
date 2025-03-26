@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { MenuService } from "../services/menu.service";
 import { OutletService } from "../services/outlet.service";
+import { notFoundImage } from "../utils/func.utils";
 
 const menuService = new MenuService();
 const outletService = new OutletService();
@@ -33,6 +34,8 @@ export const createMenu = async (req: Request, res: Response) => {
 
   if (images && images.length > 0) {
     await menuService.createMenuImages(menu.id, images);
+  } else {
+    await menuService.createMenuImages(menu.id, [notFoundImage()]);
   }
 
   res.status(201).json(menu);
