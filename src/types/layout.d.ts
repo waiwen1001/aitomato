@@ -5,7 +5,7 @@ export interface LayoutRequest {
 
 export interface LayoutPage {
   floor: string;
-  layouts: Layout[];
+  tables: Layout[];
 }
 
 export interface Layout {

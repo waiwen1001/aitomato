@@ -1,4 +1,4 @@
-import { Layout } from "@prisma/client";
+import { Layout, LayoutStatus } from "@prisma/client";
 import { LayoutRequest } from "../types/layout";
 import prisma from "./prisma.service";
 
@@ -81,18 +81,18 @@ export class OutletService {
           });
         }
 
-        const layouts = layout.layouts.map((layout) => ({
+        const layouts = layout.tables.map((table) => ({
           outletId: data.outletId,
           floorId: floor!.id,
-          pax: layout.pax,
-          status: "available",
-          x_position: layout.x,
-          y_position: layout.y,
-          width: layout.width,
-          height: layout.height,
-          type: layout.type || "table",
-          merge: layout.merge,
-          seq: layout.seq,
+          pax: table.pax,
+          status: LayoutStatus.AVAILABLE,
+          x_position: table.x,
+          y_position: table.y,
+          width: table.width,
+          height: table.height,
+          type: table.type || "table",
+          merge: table.merge,
+          seq: table.seq,
         }));
 
         await prisma.layout.createMany({
