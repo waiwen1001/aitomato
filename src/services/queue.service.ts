@@ -82,7 +82,7 @@ export class QueueService {
     return prisma.queue.findUnique({
       where: {
         id: id,
-        // status: QueueStatus.PENDING,
+        status: QueueStatus.PENDING,
       },
     });
   }
@@ -91,9 +91,6 @@ export class QueueService {
     return prisma.queue.findUnique({
       where: {
         id: id,
-      },
-      include: {
-        layout: true,
       },
     });
   }

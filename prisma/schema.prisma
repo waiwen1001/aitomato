@@ -53,9 +53,9 @@ model Category {
 }
 
 model Menu {
-  id        String   @id @default(uuid())
-  outletId  String
-  categoryId String?
+  id          String   @id @default(uuid())
+  outletId    String
+  categoryId  String?
   name        String
   price       Decimal
   description String?
@@ -67,8 +67,8 @@ model Menu {
   outlet     Outlet      @relation(fields: [outletId], references: [id])
   orderItems OrderItem[]
   images     MenuImage[]
-  category   Category?  @relation(fields: [categoryId], references: [id])
-  
+  category   Category?   @relation(fields: [categoryId], references: [id])
+
   @@map("menus")
 }
 
@@ -86,23 +86,21 @@ model MenuImage {
 }
 
 model Order {
-  id        String   @id @default(uuid())
+  id        String      @id @default(uuid())
   outletId  String
-  queueId   String   @unique
-  layoutId  String?
+  queueId   String      @unique
   subtotal  Decimal
   tax       Decimal
   gst       Decimal
   total     Decimal
   status    OrderStatus
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
 
   outlet     Outlet      @relation(fields: [outletId], references: [id])
   orderItems OrderItem[]
-  queue      Queue      @relation(fields: [queueId], references: [id])
-  layout     Layout?    @relation(fields: [layoutId], references: [id])
-  
+  queue      Queue       @relation(fields: [queueId], references: [id])
+
   @@map("orders")
 }
 
@@ -114,17 +112,17 @@ enum OrderStatus {
 }
 
 model OrderItem {
-  id        String   @id @default(uuid())
-  orderId   String
-  menuId    String
-  menuName  String
+  id              String   @id @default(uuid())
+  orderId         String
+  menuId          String
+  menuName        String
   menuDescription String?
-  thumbnailUrl String
-  price     Decimal
-  quantity  Int
-  remarks   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  thumbnailUrl    String
+  price           Decimal
+  quantity        Int
+  remarks         String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   order Order @relation(fields: [orderId], references: [id])
   menu  Menu  @relation(fields: [menuId], references: [id])
@@ -140,7 +138,7 @@ model Floor {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  outlet Outlet  @relation(fields: [outletId], references: [id])
+  outlet  Outlet   @relation(fields: [outletId], references: [id])
   layouts Layout[]
 
   @@unique([outletId, floor])
@@ -148,24 +146,23 @@ model Floor {
 }
 
 model Layout {
-  id                String      @id @default(uuid())
-  outletId          String
-  floorId           String
-  type              String
-  seq               Int
-  pax               Int
-  status            String
-  merge             Json?
-  x_position        Int
-  y_position        Int
-  width             Int
-  height            Int
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
+  id         String   @id @default(uuid())
+  outletId   String
+  floorId    String
+  type       String
+  seq        Int
+  pax        Int
+  status     String
+  merge      String?
+  x_position Int
+  y_position Int
+  width      Int
+  height     Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  floor            Floor   @relation(fields: [floorId], references: [id])
-  queue            Queue[]
-  orders           Order[]
+  floor Floor @relation(fields: [floorId], references: [id])
+
   @@map("layouts")
 }
 
@@ -183,7 +180,6 @@ model Queue {
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 
-  layout Layout? @relation(fields: [layoutId], references: [id])
   order Order?
 
   @@map("queues")

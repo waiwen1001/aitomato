@@ -5,7 +5,7 @@ CREATE TYPE "OrderStatus" AS ENUM ('PENDING', 'PROCESSING', 'COMPLETED', 'CANCEL
 CREATE TYPE "QueueStatus" AS ENUM ('PENDING', 'PROCESSING', 'CANCELLED', 'COMPLETED', 'TIMEOUT');
 
 -- CreateEnum
-CREATE TYPE "TableStatus" AS ENUM ('AVAILABLE', 'ONHOLD', 'OCCUPIED', 'MAINTENANCE');
+CREATE TYPE "LayoutStatus" AS ENUM ('AVAILABLE', 'ONHOLD', 'OCCUPIED', 'MAINTENANCE');
 
 -- CreateTable
 CREATE TABLE "restaurants" (
@@ -73,7 +73,6 @@ CREATE TABLE "orders" (
     "id" TEXT NOT NULL,
     "outletId" TEXT NOT NULL,
     "queueId" TEXT NOT NULL,
-    "tableId" TEXT NOT NULL,
     "subtotal" DECIMAL(65,30) NOT NULL,
     "tax" DECIMAL(65,30) NOT NULL,
     "gst" DECIMAL(65,30) NOT NULL,
@@ -90,8 +89,12 @@ CREATE TABLE "order_items" (
     "id" TEXT NOT NULL,
     "orderId" TEXT NOT NULL,
     "menuId" TEXT NOT NULL,
+    "menuName" TEXT NOT NULL,
     "price" DECIMAL(65,30) NOT NULL,
     "quantity" INTEGER NOT NULL,
+    "remarks" TEXT,
+    "menuDescription" TEXT,
+    "thumbnailUrl" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -110,7 +113,7 @@ CREATE TABLE "floors" (
 );
 
 -- CreateTable
-CREATE TABLE "tables" (
+CREATE TABLE "layouts" (
     "id" TEXT NOT NULL,
     "outletId" TEXT NOT NULL,
     "floorId" TEXT NOT NULL,
@@ -118,7 +121,7 @@ CREATE TABLE "tables" (
     "seq" INTEGER NOT NULL,
     "pax" INTEGER NOT NULL,
     "status" TEXT NOT NULL,
-    "merge" JSONB,
+    "merge" TEXT,
     "x_position" INTEGER NOT NULL,
     "y_position" INTEGER NOT NULL,
     "width" INTEGER NOT NULL,
@@ -126,19 +129,19 @@ CREATE TABLE "tables" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "tables_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "layouts_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "queues" (
     "id" TEXT NOT NULL,
     "outletId" TEXT NOT NULL,
+    "layoutId" TEXT,
     "pax" INTEGER NOT NULL,
     "phoneNumber" TEXT NOT NULL,
     "queueNumber" TEXT NOT NULL,
     "seq" INTEGER NOT NULL,
     "status" "QueueStatus" NOT NULL,
-    "tableId" TEXT,
     "estimatedWaitTime" TIMESTAMP(3),
     "completedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -175,9 +178,6 @@ ALTER TABLE "orders" ADD CONSTRAINT "orders_outletId_fkey" FOREIGN KEY ("outletI
 ALTER TABLE "orders" ADD CONSTRAINT "orders_queueId_fkey" FOREIGN KEY ("queueId") REFERENCES "queues"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "orders" ADD CONSTRAINT "orders_tableId_fkey" FOREIGN KEY ("tableId") REFERENCES "tables"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "order_items" ADD CONSTRAINT "order_items_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "orders"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -187,7 +187,4 @@ ALTER TABLE "order_items" ADD CONSTRAINT "order_items_menuId_fkey" FOREIGN KEY (
 ALTER TABLE "floors" ADD CONSTRAINT "floors_outletId_fkey" FOREIGN KEY ("outletId") REFERENCES "outlets"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "tables" ADD CONSTRAINT "tables_floorId_fkey" FOREIGN KEY ("floorId") REFERENCES "floors"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "queues" ADD CONSTRAINT "queues_tableId_fkey" FOREIGN KEY ("tableId") REFERENCES "tables"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "layouts" ADD CONSTRAINT "layouts_floorId_fkey" FOREIGN KEY ("floorId") REFERENCES "floors"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
