@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import sharp from "sharp";
 import { CategoryMap } from "../types/menu";
+import { copyFileToNewPath } from "../controllers/file.controller";
 
 export class MenuService {
   async getMenusByOutletId(outletId: string) {
@@ -95,9 +96,9 @@ export class MenuService {
     });
   }
 
-  async createMenuImages(menuId: string, images: string[]) {
-    const uploadPath = `uploads/${menuId}`;
-    const thumbnailPath = `uploads/${menuId}/thumbnails`;
+  async createMenuImages(restaurantId: string, menuId: string, imageUrl: string) {
+    const uploadPath = `storage/restaurants/${restaurantId}/menus/${menuId}`;
+    const thumbnailPath = `storage/restaurants/${restaurantId}/menus/${menuId}/thumbnails`;
 
     // Create directories if they don't exist
     [uploadPath, thumbnailPath].forEach((dir) => {
@@ -106,51 +107,31 @@ export class MenuService {
       }
     });
 
-    const savedImages = [];
-    const thumbnailImages = [];
-    const baseUrl = process.env.BASE_URL + "/api";
+    const { filePath, url } = await copyFileToNewPath(imageUrl, `restaurants/${restaurantId}/menus/${menuId}/original.jpg`);
+    const newThumbnailPath = `${thumbnailPath}/thumbnail.jpg`;
 
-    for (const image of images) {
-      const fileName = path.basename(image);
-      const sourcePath = path.join(process.cwd(), image);
-      const originalPath = path.join(process.cwd(), uploadPath, fileName);
-      const thumbnailPath = path.join(
-        process.cwd(),
-        uploadPath,
-        "thumbnails",
-        fileName
-      );
+    await sharp(filePath)
+      .resize(300, 300, {
+        fit: "cover",
+        position: "center",
+      })
+      .jpeg({ quality: 80 })
+      .toFile(newThumbnailPath);
 
-      // Copy original image
-      fs.copyFileSync(sourcePath, originalPath);
-
-      // Create thumbnail
-      await sharp(sourcePath)
-        .resize(300, 300, {
-          fit: "cover",
-          position: "center",
-        })
-        .jpeg({ quality: 80 })
-        .toFile(thumbnailPath);
-
-      savedImages.push(`${baseUrl}/${uploadPath}/${fileName}`);
-      thumbnailImages.push(`${baseUrl}/${uploadPath}/thumbnails/${fileName}`);
-    }
-
-    await prisma.menuImage.createMany({
-      data: savedImages.map((imagePath) => ({
+    await prisma.menuImage.create({
+      data: {
         menuId,
-        path: imagePath,
+        path: url,
         type: "original",
-      })),
+      },
     });
 
-    await prisma.menuImage.createMany({
-      data: thumbnailImages.map((imagePath) => ({
+    await prisma.menuImage.create({
+      data: {
         menuId,
-        path: imagePath,
+        path: newThumbnailPath,
         type: "thumbnail",
-      })),
+      },
     });
 
     return;

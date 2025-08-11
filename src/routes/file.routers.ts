@@ -8,7 +8,7 @@ import path from "path";
 import { v4 as uuidv4 } from "uuid";
 const router = Router();
 
-const uploadPath = "uploads/temp";
+const uploadPath = path.join(process.cwd(), "storage", "temp");
 
 if (!fs.existsSync(uploadPath)) {
   fs.mkdirSync(uploadPath, { recursive: true });

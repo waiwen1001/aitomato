@@ -19,12 +19,14 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 const httpServer = createServer(app);
 
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+}));
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/api/uploads", express.static(path.join(process.cwd(), "uploads")));
+app.use("/storage", express.static(path.join(process.cwd(), "storage")));
 
 app.use("/api/restaurants", restaurantRoutes);
 app.use("/api/queues", queueRoutes);

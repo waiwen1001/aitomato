@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { RestaurantService } from "../services/restaurant.service";
 import { OutletService } from "../services/outlet.service";
 import { MenuService } from "../services/menu.service";
+import { copyFileToNewPath } from "./file.controller";
+import { createMenu } from "./menu.controller";
 
 const restaurantService = new RestaurantService();
 const outletService = new OutletService();
@@ -42,10 +44,30 @@ export const createRestaurant = async (req: Request, res: Response) => {
       restaurantData
     );
 
+    if(restaurantData.imageUrl) {
+      const { url } = await copyFileToNewPath(restaurantData.imageUrl, `restaurants/${newRestaurant.id}/logo.jpg`);
+      await restaurantService.updateRestaurant(newRestaurant.id, {
+        logo: url,
+      });
+    }
+
     const newOutlet = await outletService.createOutlet({
       name: "Default",
       restaurantId: newRestaurant.id,
     });
+
+    if(restaurantData.items) {
+      for(const item of restaurantData.items) {
+        const menu = await menuService.createMenu({
+          outletId: newOutlet.id,
+          name: item.name,
+          price: item.price,
+          categoryId: "",
+        });
+
+        await menuService.createMenuImages(newRestaurant.id, menu.id, item.imageUrl);
+      }
+    }
 
     res.status(201).json(newOutlet);
   } catch (error) {
